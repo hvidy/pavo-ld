@@ -1,7 +1,12 @@
 """If we have a complex limb darkening law, we can fit a linear limb darkening law
 by matching the Hankel transform at a particular spatial frequency.
 
-This module accomplishes this.
+This module attempts to accomplish this
+
+TODO
+
+Based on V_from_claret, we need to fit a linear limb darkening coefficient to
+x=5.4, based on a more complex law.
 """
 from __future__ import division, print_function
 import numpy as np
@@ -36,3 +41,22 @@ def hankel(fs, rs=None, mus=None, us=np.linspace(0,3,100)):
     Fs = np.array(Fs)
     return us, Fs
     
+def V_from_claret(xs, ks, cs):
+    """Find visibility as a function of x, using the formula from
+    Quirrenbach (1996)
+    
+    Parameters
+    ----------
+    x: array-like
+        Input x ordinate
+    """
+    if len(ks) != len(cs):
+        raise UserWarning("Need one coefficient per k")
+    Vs = np.zeros_like(xs)
+    norm = 0.
+    cs0 = np.append(cs, 1-np.sum(cs))
+    ks0 = np.append(ks, 0)
+    for k, c in zip(ks0, cs0):
+        Vs += c*2**(k/2)*sp.gamma(k/2+1)*sp.jv(k/2+1,xs)/xs**(k/2+1)
+        norm += c/(k+2)
+    return Vs/norm
